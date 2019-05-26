@@ -90,7 +90,7 @@ def softmax_loss_vectorized(W, X, y, reg):
 
     softmax_prob = np.exp(f)/np.sum(np.exp(f),1).reshape(-1,1)
     softmax_prob[range(num_train),list(y)] += -1
-    
+
     dW += X.T.dot(softmax_prob)/num_train + reg*W
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
