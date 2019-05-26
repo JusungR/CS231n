@@ -32,8 +32,25 @@ def softmax_loss_naive(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_train = X.shape[0]
+    num_classes = W.shape[1]
 
-    pass
+    f = X.dot(W)
+
+    for i in range(num_train):
+        f_i = f[i,:]
+        log_C_i = np.max(f_i)
+        f_i += -log_C_i #for numeric stability
+        loss_i = -f_i[y[i]]+np.log(np.sum(np.exp(f_i)))
+        loss += loss_i
+
+        for j in range(num_classes):
+            softmax_prob = np.exp(f_i[j])/sum(np.exp(f_i))
+            dW[:,j] += - ((y[i] == j)-softmax_prob)*X[i]
+
+    loss = loss/num_train + reg*np.sum(W*W)
+    dW = dW/num_train + reg*W
+
 
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -57,9 +74,24 @@ def softmax_loss_vectorized(W, X, y, reg):
     # regularization!                                                           #
     #############################################################################
     # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
+    num_train = X.shape[0]
+    num_classes = W.shape[1]
 
-    pass
+    f = X.dot(W)
+    log_C = np.max(f,1).reshape(num_train,-1)
+    f -= log_C
 
+    #calculating loss
+    f_y_i = f[range(num_train),y].reshape(-1,1)
+    temp = np.log(np.sum(np.exp(f),1)).reshape(-1,1)
+    loss = np.sum(- f_y_i + temp)/num_train + 0.5*reg*np.sum(W*W)
+
+    #calculating gradient
+
+    softmax_prob = np.exp(f)/np.sum(np.exp(f),1).reshape(-1,1)
+    softmax_prob[range(num_train),list(y)] += -1
+    
+    dW += X.T.dot(softmax_prob)/num_train + reg*W
     # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
     return loss, dW
