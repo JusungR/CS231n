@@ -6,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from past.builtins import xrange
 
+Relu = lambda x : x *(x>0)
+
 class TwoLayerNet(object):
     """
     A two-layer fully-connected neural network. The net has an input dimension of
@@ -80,7 +82,9 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        H1 = Relu(X.dot(W1)+b1)
+        H2 = H1.dot(W2)+b2
+        scores = H2#np.exp(H2) #/np.sum(np.exp(H2),1).reshape(len(H2),-1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -98,7 +102,14 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        scores_shift = scores - np.max(scores,1).reshape(-1,1)
+        softmax_outputs = np.exp(scores_shift)/np.sum(np.exp(scores_shift),1).reshape(-1,1)
+
+        temp = softmax_outputs[range(N),list(y)]
+        loss = -np.sum(np.log(temp))/N
+        reg_term = reg*(np.sum(W1*W1)+np.sum(W2*W2)) # L2 Reg
+        loss += reg_term
+
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -111,7 +122,29 @@ class TwoLayerNet(object):
         #############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-        pass
+        dscores = softmax_outputs.copy( )#np.zeros(scores.shape)
+        dscores[range(N),list(y)] -= 1
+        dscores /= N
+#        print(dscores.shape)
+
+        grads['W2'] = H1.T.dot(dscores) + 2 * reg * W2
+        grads['b2'] = np.sum(dscores,0)
+        dH1 = dscores.dot(W2.T)
+
+#        print('H1 :', H1.shape)
+#        print('b2 :', b2.shape)
+#        print('grads_W2 :', grads['W2'].shape)
+#        print('grads_b2 :', grads['b2'].shape)
+#        print('W2 :', W2.shape)
+
+
+
+        dRelu = (H1>0)*dscores.dot(W2.T)
+#        print('grads_Relu :', dRelu.shape)
+        grads['W1'] = X.T.dot(dRelu) + 2*reg * W1
+#        print('grads_W1 :', grads['W1'].shape)
+        grads['b1'] = np.sum(dRelu,0)
+#        print('grads_b1 :', grads['b1'].shape)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
@@ -156,8 +189,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
-
+            idx = np.random.choice(num_train,batch_size, replace = True)
+            X_batch = X[idx]
+            y_batch = y[idx]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             # Compute loss and gradients using the current minibatch
@@ -172,8 +206,9 @@ class TwoLayerNet(object):
             #########################################################################
             # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
-            pass
-
+#            self.params['W2'] += - learning_rate * grads['W2']
+            for par in self.params:
+                self.params[par] -= learning_rate * grads[par]
             # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
             if verbose and it % 100 == 0:
@@ -217,8 +252,11 @@ class TwoLayerNet(object):
         # TODO: Implement this function; it should be VERY simple!                #
         ###########################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
-        pass
+        W1, b1 = self.params['W1'], self.params['b1']
+        W2, b2 = self.params['W2'], self.params['b2']
+        H1 = Relu(X.dot(W1)+b1)
+        H2 = H1.dot(W2)+b2
+        y_pred = np.argmax(H2,1)
 
         # *****END OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
 
