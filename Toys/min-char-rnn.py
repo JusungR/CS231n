@@ -21,9 +21,9 @@ learning_rate = 1e-1
 Wxh = np.random.randn(hidden_size, vocab_size)*0.01 # input to hidden
 Whh = np.random.randn(hidden_size, hidden_size)*0.01 # hidden to hidden
 Why = np.random.randn(vocab_size, hidden_size)*0.01 # hidden to output
-bh = np.zeros((hidden_size, 1)) # hidden bias
-by = np.zeros((vocab_size, 1)) # output bias
+bh = np.zeros((hidden_size, 1)) # hidden biasF
 
+by = np.zeros((vocab_size, 1)) # output bias
 def lossFun(inputs, targets, hprev):
   """
   inputs,targets are both list of integers.
@@ -83,7 +83,7 @@ mWxh, mWhh, mWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
 mbh, mby = np.zeros_like(bh), np.zeros_like(by) # memory variables for Adagrad
 smooth_loss = -np.log(1.0/vocab_size)*seq_length # loss at iteration 0
 
-while True or n <10001:
+while True and n < 10001:
   # prepare inputs (we're sweeping from left to right in steps seq_length long)
   if p+seq_length+1 >= len(data) or n == 0:
     hprev = np.zeros((hidden_size,1)) # reset RNN memory
@@ -93,8 +93,8 @@ while True or n <10001:
 
   # sample from the model now and then
   if n % 100 == 0:
-    sample_ix = sample(hprev, inputs[0], 200)
-    txt = ''.join(ix_to_char[ix] for ix in sample_ix)
+    sample_ix = sample(hprev, inputs[0], data_size)
+    txt = data[0].join(ix_to_char[ix] for ix in sample_ix)
     print('----\n %s \n----' % (txt, ))
 
   # forward seq_length characters through the net and fetch gradient
@@ -111,34 +111,3 @@ while True or n <10001:
 
   p += seq_length # move data pointer
   n += 1 # iteration counter
- @karpathy
-Owner Author
-karpathy commented on 27 Jul 2015
-Also here is the gradient check code as well. It's ugly but works:
-
-# gradient checking
-from random import uniform
-def gradCheck(inputs, target, hprev):
-  global Wxh, Whh, Why, bh, by
-  num_checks, delta = 10, 1e-5
-  _, dWxh, dWhh, dWhy, dbh, dby, _ = lossFun(inputs, targets, hprev)
-  for param,dparam,name in zip([Wxh, Whh, Why, bh, by], [dWxh, dWhh, dWhy, dbh, dby], ['Wxh', 'Whh', 'Why', 'bh', 'by']):
-    s0 = dparam.shape
-    s1 = param.shape
-    assert s0 == s1, 'Error dims dont match: %s and %s.' % (`s0`, `s1`)
-    print name
-    for i in xrange(num_checks):
-      ri = int(uniform(0,param.size))
-      # evaluate cost at [x + delta] and [x - delta]
-      old_val = param.flat[ri]
-      param.flat[ri] = old_val + delta
-      cg0, _, _, _, _, _, _ = lossFun(inputs, targets, hprev)
-      param.flat[ri] = old_val - delta
-      cg1, _, _, _, _, _, _ = lossFun(inputs, targets, hprev)
-      param.flat[ri] = old_val # reset old value for this parameter
-      # fetch both numerical and analytic gradient
-      grad_analytic = dparam.flat[ri]
-      grad_numerical = (cg0 - cg1) / ( 2 * delta )
-      rel_error = abs(grad_analytic - grad_numerical) / abs(grad_numerical + grad_analytic)
-      print '%f, %f => %e ' % (grad_numerical, grad_analytic, rel_error)
-      # rel_error should be on order of 1e-7 or less
