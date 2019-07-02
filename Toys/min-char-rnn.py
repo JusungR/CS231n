@@ -22,8 +22,8 @@ Wxh = np.random.randn(hidden_size, vocab_size)*0.01 # input to hidden
 Whh = np.random.randn(hidden_size, hidden_size)*0.01 # hidden to hidden
 Why = np.random.randn(vocab_size, hidden_size)*0.01 # hidden to output
 bh = np.zeros((hidden_size, 1)) # hidden biasF
-
 by = np.zeros((vocab_size, 1)) # output bias
+
 def lossFun(inputs, targets, hprev):
   """
   inputs,targets are both list of integers.
@@ -41,6 +41,7 @@ def lossFun(inputs, targets, hprev):
     ys[t] = np.dot(Why, hs[t]) + by # unnormalized log probabilities for next chars
     ps[t] = np.exp(ys[t]) / np.sum(np.exp(ys[t])) # probabilities for next chars
     loss += -np.log(ps[t][targets[t],0]) # softmax (cross-entropy loss)
+    
   # backward pass: compute gradients going backwards
   dWxh, dWhh, dWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
   dbh, dby = np.zeros_like(bh), np.zeros_like(by)
@@ -83,7 +84,7 @@ mWxh, mWhh, mWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
 mbh, mby = np.zeros_like(bh), np.zeros_like(by) # memory variables for Adagrad
 smooth_loss = -np.log(1.0/vocab_size)*seq_length # loss at iteration 0
 
-while True and n < 10001:
+while True and n < 50001:
   # prepare inputs (we're sweeping from left to right in steps seq_length long)
   if p+seq_length+1 >= len(data) or n == 0:
     hprev = np.zeros((hidden_size,1)) # reset RNN memory
@@ -94,8 +95,8 @@ while True and n < 10001:
   # sample from the model now and then
   if n % 100 == 0:
     sample_ix = sample(hprev, inputs[0], data_size)
-    txt = data[0].join(ix_to_char[ix] for ix in sample_ix)
-    print('----\n %s \n----' % (txt, ))
+    txt = ''.join(ix_to_char[ix] for ix in sample_ix)
+    print('----\n %s \n----' % (data[0]+txt, ))
 
   # forward seq_length characters through the net and fetch gradient
   loss, dWxh, dWhh, dWhy, dbh, dby, hprev = lossFun(inputs, targets, hprev)
