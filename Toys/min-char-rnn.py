@@ -13,7 +13,7 @@ char_to_ix = { ch:i for i,ch in enumerate(chars) }
 ix_to_char = { i:ch for i,ch in enumerate(chars) }
 
 # hyperparameters
-hidden_size = 100 # size of hidden layer of neurons
+hidden_size = 150 # size of hidden layer of neurons
 seq_length = 25 # number of steps to unroll the RNN for
 learning_rate = 1e-1
 
@@ -41,7 +41,7 @@ def lossFun(inputs, targets, hprev):
     ys[t] = np.dot(Why, hs[t]) + by # unnormalized log probabilities for next chars
     ps[t] = np.exp(ys[t]) / np.sum(np.exp(ys[t])) # probabilities for next chars
     loss += -np.log(ps[t][targets[t],0]) # softmax (cross-entropy loss)
-    
+
   # backward pass: compute gradients going backwards
   dWxh, dWhh, dWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
   dbh, dby = np.zeros_like(bh), np.zeros_like(by)
@@ -84,7 +84,7 @@ mWxh, mWhh, mWhy = np.zeros_like(Wxh), np.zeros_like(Whh), np.zeros_like(Why)
 mbh, mby = np.zeros_like(bh), np.zeros_like(by) # memory variables for Adagrad
 smooth_loss = -np.log(1.0/vocab_size)*seq_length # loss at iteration 0
 
-while True and n < 50001:
+while  n < 30001:
   # prepare inputs (we're sweeping from left to right in steps seq_length long)
   if p+seq_length+1 >= len(data) or n == 0:
     hprev = np.zeros((hidden_size,1)) # reset RNN memory
