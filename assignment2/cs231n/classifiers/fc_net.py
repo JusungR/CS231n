@@ -197,21 +197,16 @@ class FullyConnectedNet(object):
         # parameters should be initialized to zeros.                               #
         ############################################################################
         # *****START OF YOUR CODE (DO NOT DELETE/MODIFY THIS LINE)*****
-
+        dims = np.hstack((input_dim, hidden_dims, num_classes))
         for i in range(self.num_layers):
-            if i == 0:
-                layer_dim = (input_dim, hidden_dims[i])
-            elif i != self.num_layers-1:
-                layer_dim = (hidden_dims[i-1],hidden_dims[i])
-            else:
-                layer_dim = (hidden_dims[i-1], num_classes)
+            layer_dim = (dims[i], dims[i+1])
 
             idx = i +1
             self.params[f'W{idx}'] = np.random.randn(layer_dim[0], layer_dim[1]) * weight_scale
             self.params[f'b{idx}'] = np.zeros(layer_dim[1])
 
-            if self.normalization and i != num_layers-1:
-                self.params[f'gamma{idx}'] = np.ones((layer_dim[0], layer_dim[1]))
+            if self.normalization and i != self.num_layers-1:
+                self.params[f'gamma{idx}'] = np.ones(layer_dim[1])
                 self.params[f'beta{idx}'] = np.zeros(layer_dim[1])
 
 
@@ -283,14 +278,13 @@ class FullyConnectedNet(object):
         for i in range(self.num_layers):
             idx = i+1
             W, b = self.params[f'W{idx}'], self.params[f'b{idx}']
-
             output, fc_cache = affine_forward(input, W, b)
             fc_caches.append(fc_cache)
 
             #batch_norm
             if self.normalization and i != self.num_layers-1:
-                gamma, beta = self.params[f'gamma{i}'], self.params[f'beta{i}']
-                output, batch_cache = batchnorm_forward(X,gamma,beta, self.bn_params[i])
+                gamma, beta = self.params[f'gamma{idx}'], self.params[f'beta{idx}']
+                output, batch_cache = batchnorm_forward(output,gamma,beta, self.bn_params[i])
                 batch_caches.append(batch_cache)
 
             #relu
