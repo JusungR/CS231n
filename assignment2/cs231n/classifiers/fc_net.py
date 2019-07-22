@@ -205,7 +205,7 @@ class FullyConnectedNet(object):
             self.params[f'W{idx}'] = np.random.randn(layer_dim[0], layer_dim[1]) * weight_scale
             self.params[f'b{idx}'] = np.zeros(layer_dim[1])
 
-            if self.normalization and i != self.num_layers-1:
+            if self.normalization=='batchnorm' and i != self.num_layers-1:
                 self.params[f'gamma{idx}'] = np.ones(layer_dim[1])
                 self.params[f'beta{idx}'] = np.zeros(layer_dim[1])
 
@@ -281,11 +281,16 @@ class FullyConnectedNet(object):
             output, fc_cache = affine_forward(input, W, b)
             fc_caches.append(fc_cache)
 
-            #batch_norm
-            if self.normalization and i != self.num_layers-1:
-                gamma, beta = self.params[f'gamma{idx}'], self.params[f'beta{idx}']
-                output, batch_cache = batchnorm_forward(output,gamma,beta, self.bn_params[i])
-                batch_caches.append(batch_cache)
+            #batch_norm & layernrom
+            if self.normalization=='batchnorm':
+                self.bn_params = [{'mode': 'train'} for i in range(self.num_layers - 1)]
+            if self.normalization=='layernorm':
+                self.bn_params = [{} for i in range(self.num_layers - 1)]
+
+            #if self.normalization and i != self.num_layers-1:
+            #    gamma, beta = self.params[f'gamma{idx}'], self.params[f'beta{idx}']
+            #    output, batch_cache = batchnorm_forward(output,gamma,beta, self.bn_params[i])
+            #    batch_caches.append(batch_cache)
 
             #relu
             output,relu_cache = relu_forward(output)
@@ -344,7 +349,7 @@ class FullyConnectedNet(object):
             #relu
             dout = relu_backward(dout, relu_caches[i-1])
             #batch_norm
-            if self.normalization and i != self.num_layers:
+            if self.normalization == 'batchnorm':# and i != self.num_layers:
                 dout,dgamma,dbeta = batchnorm_backward(dout, batch_caches[i-1])
                 grads[f'gamma{i}'] = dgamma
                 grads[f'beta{i}'] = dbeta
